@@ -5,18 +5,20 @@
 class Circle
 {
 public:
-    Circle(SDL_Renderer* renderer, SDL_Point center, int radius, SDL_Color color);
+    Circle(SDL_Point center, int radius, SDL_Color color);
 
-    void draw();
+    void draw(SDL_Renderer* renderer);
 
-    void changeCenter(int dx, int dy);
+    void changeCenter(float dx, float dy);
 
-    SDL_Point getCenter();
+    int getRadius();
 
-    void setCenter(SDL_Point center);
+    void update(float dt);
+    
 private:
-    SDL_Renderer* renderer;
-    SDL_Point center;
+    float mX, mY;
     int radius;
     SDL_Color color;
+
+    float mPreviousX, mPreviousY;
 };

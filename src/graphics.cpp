@@ -1,6 +1,6 @@
 #include "graphics.hpp"
 #include <SDL2/SDL.h>
-#include "circle.hpp"
+#include "engine.hpp"
 
 Graphics::Graphics() : window(nullptr), renderer(nullptr) {}
 
@@ -50,7 +50,11 @@ void Graphics::run()
     // Event handler (necessary to prevent the window from closing immediately)
     SDL_Event e;
 
-    Circle circle(renderer, {100, 100}, 100, {0xFF, 0xFF, 0xFF, 0xFF});
+    Engine engine;
+
+    engine.addCircle();
+
+    float dt = 1.0 / 60;
 
     while (running)
     {
@@ -65,8 +69,8 @@ void Graphics::run()
         SDL_SetRenderDrawColor(renderer, 0x40, 0x40, 0x40, 0xFF);
         SDL_RenderClear(renderer);
 
-        circle.draw();
-        circle.changeCenter(1, 1);
+        engine.drawAll(renderer);
+        engine.update(dt);
 
         SDL_RenderPresent(renderer);
     }

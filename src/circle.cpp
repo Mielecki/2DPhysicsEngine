@@ -1,15 +1,17 @@
-#include <circle.hpp>
+#include "circle.hpp"
 #include <SDL2/SDL.h>
 
-Circle::Circle(SDL_Renderer* renderer, SDL_Point center, int radius, SDL_Color color)
+Circle::Circle(SDL_Point center, int radius, SDL_Color color)
 {
-    this->renderer = renderer;
-    this->center = center;
+    this->mX = center.x;
+    this->mY = center.y;
+    this->mPreviousX = center.x;
+    this->mPreviousY = center.y;
     this->radius = radius;
     this->color = color;
 }
 
-void Circle::draw()
+void Circle::draw(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 
@@ -21,23 +23,35 @@ void Circle::draw()
         {
             if ((x*x + y*y) <= (radius * radius))
             {
-                SDL_RenderDrawPoint(renderer, center.x + x, center.y + y);
+                SDL_RenderDrawPoint(renderer, mX + x, mY + y);
             }
         }
     }
 }
 
-void Circle::changeCenter(int dx, int dy)
+void Circle::changeCenter(float dx, float dy)
 {
-    setCenter({center.x + dx, center.y + dy});
+    mPreviousX = mX;
+    mPreviousY = mY;
+    mX += dx;
+    mY += dy;
 }
 
-SDL_Point Circle::getCenter()
+int Circle::getRadius()
 {
-    return center;
+    return radius;
 }
 
-void Circle::setCenter(SDL_Point center)
+void Circle::update(float dt)
 {
-    this->center = center;
+    float dy = mY - mPreviousY + 500*dt*dt;
+
+    // Check if the circle has reached the floor
+    // If so, reverse vertical velocity to simulate a bounce
+    if (mY + dy >= 480 - radius) 
+    {   
+        dy = -dy * 0.8;
+        mY = 480 - radius;
+    }
+    changeCenter(0, dy);
 }

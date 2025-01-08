@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -std=c++11
 INCLUDE = -I./include
 LIBS = `sdl2-config --libs`
 
-SRC = src/main.cpp src/graphics.cpp src/circle.cpp
+SRC = src/main.cpp src/graphics.cpp src/circle.cpp src/engine.cpp
 OBJ = $(SRC:src/%.cpp=build/%.o)
 TARGET = 2DPhysicsEngine
 

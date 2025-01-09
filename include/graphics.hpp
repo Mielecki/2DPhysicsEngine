@@ -8,6 +8,8 @@ class Graphics
 public:
     Graphics();
 
+    ~Graphics();
+
     void init();
 
     void run();
@@ -21,5 +23,5 @@ private:
 
     SDL_Window* mWindow;
     SDL_Renderer* mRenderer;
-    Engine mEngine;
+    Engine* mEngine;
 };

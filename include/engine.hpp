@@ -6,6 +6,8 @@
 class Engine
 {
 public:
+    Engine(int width, int height);
+
     void addParticle();
 
     void update(float dt);
@@ -16,8 +18,13 @@ public:
 
     void applyGravity();
 
+    void changeContainerSize(int width, int height);
+
     std::vector<Particle>& getParticles();
 
 private:
+    int mContainerWidth;
+    int mContainerHeight;
+
     std::vector<Particle> mParticles;
 };

@@ -1,5 +1,7 @@
 #include "engine.hpp"
 
+Engine::Engine(int width, int height) : mContainerWidth(width), mContainerHeight(height) {}
+
 void Engine::addParticle()
 {
     Particle particle({125, 50}, 5, {0xFF, 0xFF, 0xFF, 0xFF});
@@ -12,8 +14,8 @@ void Engine::resolveWallCollision()
 {
     for (Particle& p : mParticles)
     {
-        if (p.mPosition.y >= 480 - p.mRadius) p.mPosition.y = 480 - p.mRadius;
-        if (p.mPosition.x >= 640 - p.mRadius) p.mPosition.x = 640 - p.mRadius;
+        if (p.mPosition.y >= mContainerHeight - p.mRadius) p.mPosition.y = mContainerHeight - p.mRadius;
+        if (p.mPosition.x >= mContainerWidth - p.mRadius) p.mPosition.x = mContainerWidth - p.mRadius;
         if (p.mPosition.x <= p.mRadius) p.mPosition.x = p.mRadius;
         if (p.mPosition.y <= p.mRadius) p.mPosition.y = p.mRadius;
     }
@@ -67,4 +69,11 @@ void Engine::update(float dt)
 std::vector<Particle>& Engine::getParticles()
 {
     return mParticles;
+}
+
+
+void Engine::changeContainerSize(int width, int height)
+{
+    mContainerWidth = width;
+    mContainerHeight = height;
 }

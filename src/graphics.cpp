@@ -6,9 +6,14 @@
 #include <string>
 #include <sstream>
 
-Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr) {}
+Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr), mEngine(nullptr) {}
 
-// Initalizes SDL, window and renderer
+Graphics::~Graphics()
+{
+    cleanup();
+}
+
+// Initalizes SDL, window, renderer and physics engine
 void Graphics::init()
 {
     // Initializes SDL video
@@ -33,11 +38,19 @@ void Graphics::init()
         printf("SDL creating renderer error: %s\n", SDL_GetError());
         return;
     }
+
+    mEngine = new Engine(SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 // Closes SDL2
 void Graphics::cleanup()
 {
+    if (mEngine != nullptr)
+    {
+        delete mEngine;
+        mEngine = nullptr;
+    }
+
     SDL_DestroyRenderer(mRenderer);
     SDL_DestroyWindow(mWindow);
     mRenderer = nullptr;
@@ -53,8 +66,6 @@ void Graphics::run()
 
     // Event handler (necessary to prevent the window from closing immediately)
     SDL_Event e;
-
-    Engine engine;
 
     std::stringstream title;
     title.precision(4);
@@ -78,14 +89,22 @@ void Graphics::run()
             }
         }
 
-        if (++currentParticles < maxParticles) engine.addParticle();
+        if (currentParticles < maxParticles)
+        {
+            currentParticles++;
+            mEngine->addParticle();
+        }
+
+        int h, w;
+        SDL_GetWindowSize(mWindow, &w, &h);
+        mEngine->changeContainerSize(w, h);
 
         SDL_SetRenderDrawColor(mRenderer, 0x40, 0x40, 0x40, 0xFF);
         SDL_RenderClear(mRenderer);
 
-        engine.update(dt);
+        mEngine->update(dt);
 
-        for (Particle& particle : engine.getParticles())
+        for (Particle& particle : mEngine->getParticles())
         {
             particle.draw(mRenderer);
         }

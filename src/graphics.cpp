@@ -1,6 +1,9 @@
 #include "graphics.hpp"
 #include <SDL2/SDL.h>
 #include "engine.hpp"
+#include "timer.hpp"
+#include <string>
+#include <sstream>
 
 Graphics::Graphics() : window(nullptr), renderer(nullptr) {}
 
@@ -52,15 +55,19 @@ void Graphics::run()
 
     Engine engine;
 
-    engine.addCircle();
+    std::stringstream title;
+    title.precision(4);
 
-    float dt = 1.0 / 60;
+    Timer capTimer;
 
-    int maxCircles = 500;
+    float dt = 1.0 / FPS;
+
+    int maxCircles = 1500;
     int currentCircles = 0;
 
     while (running)
-    {
+    {   
+        capTimer.start();
         while (SDL_PollEvent(&e) != 0)
         {
             // Prevents from closing immediately
@@ -77,5 +84,15 @@ void Graphics::run()
         engine.drawAll(renderer);
 
         SDL_RenderPresent(renderer);
+
+        title.str("");
+        title << "FPS: " << 1000.0 / capTimer.getTicks() << "; Circles: " << currentCircles;
+        SDL_SetWindowTitle(window, title.str().c_str());
+
+        int frameTicks = capTimer.getTicks();
+        if (frameTicks < 1000 / FPS)
+        {
+            SDL_Delay(1000/FPS - frameTicks);
+        }
     }
 }

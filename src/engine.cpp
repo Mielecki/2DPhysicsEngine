@@ -2,7 +2,7 @@
 
 bool Engine::addCircle()
 {
-    Circle circle({125, 50}, 10, {0xFF, 0xFF, 0xFF, 0xFF});
+    Circle circle({125, 50}, 5, {0xFF, 0xFF, 0xFF, 0xFF});
     circle.mPreviousX = 124;
     circle.mPreviousY = 49;
     

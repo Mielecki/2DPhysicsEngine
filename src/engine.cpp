@@ -1,37 +1,70 @@
 #include "engine.hpp"
 
-bool Engine::addCircle()
+void Engine::addParticle()
 {
-    Circle circle({125, 50}, 5, {0xFF, 0xFF, 0xFF, 0xFF});
-    circle.mPreviousX = 124;
-    circle.mPreviousY = 49;
+    Particle particle({125, 50}, 5, {0xFF, 0xFF, 0xFF, 0xFF});
+    particle.addVelocity({1, 1});
     
+    mParticles.push_back(particle);
+}
 
+void Engine::resolveWallCollision()
+{
+    for (Particle& p : mParticles)
+    {
+        if (p.mPosition.y >= 480 - p.mRadius) p.mPosition.y = 480 - p.mRadius;
+        if (p.mPosition.x >= 640 - p.mRadius) p.mPosition.x = 640 - p.mRadius;
+        if (p.mPosition.x <= p.mRadius) p.mPosition.x = p.mRadius;
+        if (p.mPosition.y <= p.mRadius) p.mPosition.y = p.mRadius;
+    }
+}
 
-    circles.push_back(circle);
-    return true;
+void Engine::resolveCollision()
+{
+    for (Particle& p1 : mParticles)
+    {
+        for (Particle& p2 : mParticles)
+        {
+            if (&p1 == &p2) continue;
+
+            Vector2D offset = p1.mPosition - p2.mPosition;
+            float minDistance = p1.mRadius + p2.mRadius;
+
+            float distance = std::sqrt(offset.x * offset.x + offset.y * offset.y);
+
+            if (distance < minDistance)
+            {
+                float delta = 0.5 * (distance - minDistance);
+                Vector2D positionChange = offset / distance * delta;
+                
+                p1.mPosition -= positionChange;
+                p2.mPosition += positionChange;
+            }
+        }
+    }
+}
+
+void Engine::applyGravity()
+{
+    for (Particle& particle : mParticles)
+    {
+        particle.mAcceleration = {0, 200.0};
+    }
 }
 
 void Engine::update(float dt)
 {
-    for (Circle& circle : circles)
-    {
-        for (Circle& other : circles)
-        {
-            if (&circle != &other) circle.resolveCollision(other);
-        }
-    }
+    applyGravity();
+    resolveCollision();
+    resolveWallCollision();
 
-    for (size_t i = 0; i < circles.size(); i++)
+    for (Particle& particle : mParticles)
     {
-        circles.at(i).update(dt);
+        particle.update(dt);
     }
 }
 
-void Engine::drawAll(SDL_Renderer* renderer)
+std::vector<Particle>& Engine::getParticles()
 {
-    for (size_t i = 0; i < circles.size(); i++)
-    {
-        circles.at(i).draw(renderer);
-    }  
+    return mParticles;
 }

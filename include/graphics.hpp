@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include "engine.hpp"
 
 class Graphics
 {
@@ -16,8 +17,9 @@ public:
 private:
     const int SCREEN_WIDTH = 640;
     const int SCREEN_HEIGHT = 480;
-    const int FPS = 60;
+    const int SCREEN_FPS = 60;
 
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    SDL_Window* mWindow;
+    SDL_Renderer* mRenderer;
+    Engine mEngine;
 };

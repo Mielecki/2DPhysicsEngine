@@ -1,17 +1,23 @@
 #pragma once
 
 #include <vector>
-#include "circle.hpp"
+#include "particle.hpp"
 
 class Engine
 {
 public:
-    bool addCircle();
+    void addParticle();
 
     void update(float dt);
 
-    void drawAll(SDL_Renderer* renderer);
+    void resolveCollision();
+
+    void resolveWallCollision();
+
+    void applyGravity();
+
+    std::vector<Particle>& getParticles();
 
 private:
-    std::vector<Circle> circles;
+    std::vector<Particle> mParticles;
 };

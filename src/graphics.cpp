@@ -1,11 +1,12 @@
 #include "graphics.hpp"
 #include <SDL2/SDL.h>
-#include "engine.hpp"
+#include "particle.hpp"
 #include "timer.hpp"
+#include "engine.hpp"
 #include <string>
 #include <sstream>
 
-Graphics::Graphics() : window(nullptr), renderer(nullptr) {}
+Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr) {}
 
 // Initalizes SDL, window and renderer
 void Graphics::init()
@@ -18,16 +19,16 @@ void Graphics::init()
     }
 
     // Creates window
-    window = SDL_CreateWindow("2DPhysicsEngine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == nullptr)
+    mWindow = SDL_CreateWindow("2DPhysicsEngine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (mWindow == nullptr)
     {
         printf("SDL creating window error: %s\n", SDL_GetError());
         return;
     }
 
     // Creates renderer for window that uses hardware acceleration and vsync
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == nullptr)
+    mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (mRenderer == nullptr)
     {
         printf("SDL creating renderer error: %s\n", SDL_GetError());
         return;
@@ -37,10 +38,10 @@ void Graphics::init()
 // Closes SDL2
 void Graphics::cleanup()
 {
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    renderer = nullptr;
-    window = nullptr;
+    SDL_DestroyRenderer(mRenderer);
+    SDL_DestroyWindow(mWindow);
+    mRenderer = nullptr;
+    mWindow = nullptr;
 
     SDL_Quit();
 }
@@ -60,10 +61,10 @@ void Graphics::run()
 
     Timer capTimer;
 
-    float dt = 1.0 / FPS;
+    float dt = 1.0 / SCREEN_FPS;
 
-    int maxCircles = 1500;
-    int currentCircles = 0;
+    int maxParticles = 200;
+    int currentParticles = 0;
 
     while (running)
     {   
@@ -76,23 +77,30 @@ void Graphics::run()
                 running = false;
             }
         }
-        SDL_SetRenderDrawColor(renderer, 0x40, 0x40, 0x40, 0xFF);
-        SDL_RenderClear(renderer);
 
-        if (currentCircles < maxCircles && engine.addCircle()) currentCircles++;
+        if (++currentParticles < maxParticles) engine.addParticle();
+
+        SDL_SetRenderDrawColor(mRenderer, 0x40, 0x40, 0x40, 0xFF);
+        SDL_RenderClear(mRenderer);
+
         engine.update(dt);
-        engine.drawAll(renderer);
 
-        SDL_RenderPresent(renderer);
+        for (Particle& particle : engine.getParticles())
+        {
+            particle.draw(mRenderer);
+        }
 
+        SDL_RenderPresent(mRenderer);
+
+        // Shows FPS and current amount of particles in the window title
         title.str("");
-        title << "FPS: " << 1000.0 / capTimer.getTicks() << "; Circles: " << currentCircles;
-        SDL_SetWindowTitle(window, title.str().c_str());
+        title << "FPS: " << 1000.0 / capTimer.getTicks() << "; Particles: " << currentParticles;
+        SDL_SetWindowTitle(mWindow, title.str().c_str());
 
         int frameTicks = capTimer.getTicks();
-        if (frameTicks < 1000 / FPS)
+        if (frameTicks < 1000 / SCREEN_FPS)
         {
-            SDL_Delay(1000/FPS - frameTicks);
+            SDL_Delay(1000/SCREEN_FPS - frameTicks);
         }
     }
 }

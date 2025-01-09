@@ -8,17 +8,11 @@ void Particle::draw(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, mColor.r, mColor.g, mColor.b, mColor.a);
 
-    // Iterates through every pixel in the square of size 2*radius by 2*radius
-    // If the pixel is inside the desired particle, it colors the pixel
-    for (int x = -mRadius; x <= mRadius; x++)
+    // For each y-coordiante, calculate the maximum x-range using the circle equation and then draw a line using it
+    for (int y = -mRadius; y <= mRadius; y++)
     {
-        for (int y = -mRadius; y <= mRadius; y++)
-        {
-            if ((x*x + y*y) <= (mRadius * mRadius))
-            {
-                SDL_RenderDrawPoint(renderer, mPosition.x + x, mPosition.y + y);
-            }
-        }
+        int dx = std::sqrt(mRadius * mRadius - y * y);
+        SDL_RenderDrawLine(renderer, mPosition.x - dx, mPosition.y + y, mPosition.x + dx, mPosition.y + y);
     }
 }
 
@@ -36,7 +30,7 @@ void Particle::changePosition(Vector2D position)
 void Particle::update(float dt)
 {   
     // Verlet Integration (https://www.algorithm-archive.org/contents/verlet_integration/verlet_integration.html)
-    Vector2D newPosition = mPosition * 2 - mPreviousPosition + (mAcceleration - (mPosition - mPreviousPosition) * 40) * dt * dt;
+    Vector2D newPosition = mPosition * 2 - mPreviousPosition + (mAcceleration - (mPosition - mPreviousPosition) * 50) * dt * dt;
 
     changePosition(newPosition);
 }

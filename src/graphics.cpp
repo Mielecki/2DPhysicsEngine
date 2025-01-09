@@ -74,8 +74,10 @@ void Graphics::run()
 
     float dt = 1.0 / SCREEN_FPS;
 
-    int maxParticles = 200;
+    int maxParticles = 50;
     int currentParticles = 0;
+
+    int currentFrame = 0;
 
     while (running)
     {   
@@ -89,7 +91,7 @@ void Graphics::run()
             }
         }
 
-        if (currentParticles < maxParticles)
+        if (currentFrame % 5 == 0 && currentParticles < maxParticles)
         {
             currentParticles++;
             mEngine->addParticle();
@@ -121,5 +123,7 @@ void Graphics::run()
         {
             SDL_Delay(1000/SCREEN_FPS - frameTicks);
         }
+
+        currentFrame++;
     }
 }

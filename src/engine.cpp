@@ -4,8 +4,8 @@ Engine::Engine(int width, int height) : mContainerWidth(width), mContainerHeight
 
 void Engine::addParticle()
 {
-    Particle particle({125, 50}, 5, {0xFF, 0xFF, 0xFF, 0xFF});
-    particle.addVelocity({1, 1});
+    Particle particle({mContainerWidth/4, mContainerHeight/4}, 5, {0xFF, 0xFF, 0xFF, 0xFF});
+    particle.addVelocity({10, 2});
     
     mParticles.push_back(particle);
 }

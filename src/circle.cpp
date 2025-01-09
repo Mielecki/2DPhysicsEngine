@@ -37,21 +37,40 @@ void Circle::changeCenter(float dx, float dy)
     mY += dy;
 }
 
-int Circle::getRadius()
-{
-    return radius;
+void Circle::update(float dt)
+{   
+    // gravity
+    accelerationY = 200.0;
+
+    // Solve the situation when ball has reached the wall
+    if (mY >= 480 - radius) mY = 480 - radius;
+    if (mX >= 640 - radius) mX = 640 - radius;
+    if (mX <= radius) mX = radius;
+    if (mY <= radius) mY = radius;
+
+    // Verlet Integration (https://www.algorithm-archive.org/contents/verlet_integration/verlet_integration.html)
+    float dx = mX - mPreviousX + (accelerationX - (mX - mPreviousX) * 40)*dt*dt;
+    float dy = mY - mPreviousY + (accelerationY - (mY - mPreviousY) * 40) *dt*dt;
+
+    changeCenter(dx, dy);
 }
 
-void Circle::update(float dt)
+void Circle::resolveCollision(Circle& other)
 {
-    float dy = mY - mPreviousY + 500*dt*dt;
+    float distanceX = other.mX - mX;
+    float distanceY = other.mY - mY;
+    float minDistance = radius + other.radius;
+    float distance = std::sqrt(distanceX * distanceX + distanceY * distanceY);
 
-    // Check if the circle has reached the floor
-    // If so, reverse vertical velocity to simulate a bounce
-    if (mY + dy >= 480 - radius) 
-    {   
-        dy = -dy * 0.8;
-        mY = 480 - radius;
+    if (distance < minDistance)
+    {
+        float delta = 0.5 * (distance - minDistance);
+        float dx = distanceX / distance * delta;
+        float dy = distanceY / distance * delta;
+        
+        mX += dx;
+        mY += dy;
+        other.mX -= dx;
+        other.mY -= dy;
     }
-    changeCenter(0, dy);
 }

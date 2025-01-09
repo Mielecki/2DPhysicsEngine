@@ -1,16 +1,27 @@
 #include "engine.hpp"
 
-void Engine::addCircle()
+bool Engine::addCircle()
 {
-    Circle circle({20, 50}, 20, {0xFF, 0xFF, 0xFF, 0xFF});
-    circles.push_back(circle);
+    Circle circle({125, 50}, 10, {0xFF, 0xFF, 0xFF, 0xFF});
+    circle.mPreviousX = 124;
+    circle.mPreviousY = 49;
+    
 
-    Circle circle2({200, 220}, 10, {0xFF, 0xFF, 0xFF, 0xFF});
-    circles.push_back(circle2);
+
+    circles.push_back(circle);
+    return true;
 }
 
 void Engine::update(float dt)
 {
+    for (Circle& circle : circles)
+    {
+        for (Circle& other : circles)
+        {
+            if (&circle != &other) circle.resolveCollision(other);
+        }
+    }
+
     for (size_t i = 0; i < circles.size(); i++)
     {
         circles.at(i).update(dt);

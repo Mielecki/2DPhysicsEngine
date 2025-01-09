@@ -56,6 +56,9 @@ void Graphics::run()
 
     float dt = 1.0 / 60;
 
+    int maxCircles = 500;
+    int currentCircles = 0;
+
     while (running)
     {
         while (SDL_PollEvent(&e) != 0)
@@ -69,8 +72,9 @@ void Graphics::run()
         SDL_SetRenderDrawColor(renderer, 0x40, 0x40, 0x40, 0xFF);
         SDL_RenderClear(renderer);
 
-        engine.drawAll(renderer);
+        if (currentCircles < maxCircles && engine.addCircle()) currentCircles++;
         engine.update(dt);
+        engine.drawAll(renderer);
 
         SDL_RenderPresent(renderer);
     }

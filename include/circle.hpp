@@ -11,14 +11,15 @@ public:
 
     void changeCenter(float dx, float dy);
 
-    int getRadius();
+    void resolveCollision(Circle& other);
 
     void update(float dt);
     
-private:
     float mX, mY;
-    int radius;
-    SDL_Color color;
-
     float mPreviousX, mPreviousY;
+    int radius;
+    float accelerationX = 0;
+    float accelerationY = 0;
+private:
+    SDL_Color color;
 };

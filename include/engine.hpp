@@ -6,7 +6,7 @@
 class Engine
 {
 public:
-    void addCircle();
+    bool addCircle();
 
     void update(float dt);
 

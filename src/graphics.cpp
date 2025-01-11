@@ -60,12 +60,28 @@ void Graphics::cleanup()
         mEngine = nullptr;
     }
 
+    TTF_CloseFont(mFont);
+    mFont = nullptr;
+
     SDL_DestroyRenderer(mRenderer);
     SDL_DestroyWindow(mWindow);
     mRenderer = nullptr;
     mWindow = nullptr;
 
     SDL_Quit();
+    TTF_Quit();
+}
+
+bool Graphics::loadMedia()
+{
+    mFont = TTF_OpenFont("src/assets/RobotoMono-VariableFont_wght.ttf", 16);
+    if (mFont == nullptr)
+    {
+        printf("SDL_ttf opening font error: %s\n", TTF_GetError());
+        return false;
+    }
+
+    return true;
 }
 
 void Graphics::run()
@@ -76,9 +92,6 @@ void Graphics::run()
     // Event handler (necessary to prevent the window from closing immediately)
     SDL_Event e;
 
-    std::stringstream title;
-    title.precision(4);
-
     Timer capTimer;
 
     SDL_Point mousePosition = {0, 0};
@@ -87,9 +100,16 @@ void Graphics::run()
 
     int maxParticles = 200;
     int currentParticles = 0;
+    Texture particlesText(mRenderer, mFont);
+    particlesText.loadFromRenderedText("Particles: 0", {0xFF, 0xFF, 0xFF});
 
     int currentFrame = 0;
-
+    int frameCounter = 0;
+    Timer fpsTimer;
+    Texture fpsText(mRenderer, mFont);
+    fpsText.loadFromRenderedText("FPS: 0", {0xFF, 0xFF, 0xFF});
+    fpsTimer.start();
+    
     while (running)
     {   
         capTimer.start();
@@ -110,6 +130,7 @@ void Graphics::run()
             {
                 currentParticles++;
                 mEngine->addParticle(mousePosition.x, mousePosition.y);
+                particlesText.loadFromRenderedText("Particles: " + std::to_string(currentParticles), {0xFF, 0xFF, 0xFF});
             }
         }
 
@@ -127,12 +148,26 @@ void Graphics::run()
             particle.draw(mRenderer);
         }
 
-        SDL_RenderPresent(mRenderer);
 
-        // Shows FPS and current amount of particles in the window title
-        title.str("");
-        title << "FPS: " << 1000.0 / capTimer.getTicks() << "; Particles: " << currentParticles;
-        SDL_SetWindowTitle(mWindow, title.str().c_str());
+        frameCounter++;
+        Uint32 updateTime = fpsTimer.getTicks();
+        if (updateTime >= 400)
+        {
+            float fps = frameCounter / (updateTime / 1000.0f);
+            frameCounter = 0;
+
+            fpsTimer.start();
+
+            if (!fpsText.loadFromRenderedText("FPS: " + std::to_string(fps).substr(0, 5), {0xFF, 0xFF, 0xFF}))
+            {
+                printf("Failed to render FPS text.\n");
+            }
+        }
+
+        fpsText.render(0, 0);
+        particlesText.render(0, 16);
+
+        SDL_RenderPresent(mRenderer);
 
         int frameTicks = capTimer.getTicks();
         if (frameTicks < 1000 / SCREEN_FPS)

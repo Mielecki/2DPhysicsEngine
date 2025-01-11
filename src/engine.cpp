@@ -50,7 +50,7 @@ void Engine::applyGravity()
 {
     for (Particle& particle : mParticles)
     {
-        particle.mAcceleration = {0, 200.0};
+        particle.mAcceleration = {0, 400.0};
     }
 }
 

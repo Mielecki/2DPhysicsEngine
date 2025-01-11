@@ -8,7 +8,7 @@ class Engine
 public:
     Engine(int width, int height);
 
-    void addParticle();
+    void addParticle(int x, int y);
 
     void update(float dt);
 

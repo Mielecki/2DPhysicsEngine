@@ -5,6 +5,7 @@
 #include "engine.hpp"
 #include <string>
 #include <sstream>
+#include <SDL2/SDL_ttf.h>
 
 Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr), mEngine(nullptr) {}
 
@@ -14,13 +15,20 @@ Graphics::~Graphics()
 }
 
 // Initalizes SDL, window, renderer and physics engine
-void Graphics::init()
+bool Graphics::init()
 {
     // Initializes SDL video
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         printf("SDL initaliaztion error: %s\n", SDL_GetError());
-        return;
+        return false;
+    }
+
+    // Initalizes SDL_ttf
+    if (TTF_Init() == -1)
+    {
+        printf("SDL_ttf initaliaztion error: %s\n", TTF_GetError());
+        return false;
     }
 
     // Creates window
@@ -28,7 +36,7 @@ void Graphics::init()
     if (mWindow == nullptr)
     {
         printf("SDL creating window error: %s\n", SDL_GetError());
-        return;
+        return false;
     }
 
     // Creates renderer for window that uses hardware acceleration and vsync
@@ -36,10 +44,11 @@ void Graphics::init()
     if (mRenderer == nullptr)
     {
         printf("SDL creating renderer error: %s\n", SDL_GetError());
-        return;
+        return false;
     }
 
     mEngine = new Engine(SCREEN_WIDTH, SCREEN_HEIGHT);
+    return true;
 }
 
 // Closes SDL2
@@ -72,9 +81,11 @@ void Graphics::run()
 
     Timer capTimer;
 
+    SDL_Point mousePosition = {0, 0};
+
     float dt = 1.0 / SCREEN_FPS;
 
-    int maxParticles = 50;
+    int maxParticles = 200;
     int currentParticles = 0;
 
     int currentFrame = 0;
@@ -89,12 +100,17 @@ void Graphics::run()
             {
                 running = false;
             }
-        }
 
-        if (currentFrame % 5 == 0 && currentParticles < maxParticles)
-        {
-            currentParticles++;
-            mEngine->addParticle();
+            if (e.type == SDL_MOUSEMOTION)
+            {
+                SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+            }
+
+            if (e.type == SDL_MOUSEBUTTONDOWN)
+            {
+                currentParticles++;
+                mEngine->addParticle(mousePosition.x, mousePosition.y);
+            }
         }
 
         int h, w;

@@ -5,9 +5,11 @@ int main()
 {
     Graphics graphics;
 
-    graphics.init();
+    if (!graphics.init()) return -1;
 
     graphics.run();
 
     graphics.cleanup();
+
+    return 0;
 }

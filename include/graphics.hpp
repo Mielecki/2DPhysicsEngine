@@ -10,7 +10,7 @@ public:
 
     ~Graphics();
 
-    void init();
+    bool init();
 
     void run();
 

@@ -1,14 +1,16 @@
 #include "graphics.hpp"
 #include <SDL2/SDL.h>
 #include "particle.hpp"
-#include "timer.hpp"
 #include "engine.hpp"
 #include <string>
 #include <sstream>
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
 
-Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr), mEngine(nullptr) {}
+Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr), mEngine(nullptr)
+{
+    dt = 1.0f/SCREEN_FPS;
+}
 
 Graphics::~Graphics()
 {
@@ -85,6 +87,69 @@ bool Graphics::loadMedia()
     return true;
 }
 
+
+void Graphics::updateFPS(int &frameCounter, Timer& fpsTimer, Texture& fpsText)
+{
+    frameCounter++;
+    Uint32 updateTime = fpsTimer.getTicks();
+    if (updateTime >= FPS_UPDATE_INTERVAL)
+    {
+        float fps = frameCounter / (updateTime / 1000.0f);
+        frameCounter = 0;
+
+        fpsTimer.start();
+
+        if (!fpsText.loadFromRenderedText("FPS: " + std::to_string(fps).substr(0, 5), TEXT_COLOR))
+        {
+            printf("Failed to render FPS text.\n");
+        }
+    }
+}
+
+
+void Graphics::drawParticles()
+{
+    for (Particle& particle : mEngine->getParticles())
+    {   
+        Vector2D velocityVector = particle.getVelocity(dt);
+        float velocity = std::min(sqrt(velocityVector.x * velocityVector.x + velocityVector.y + velocityVector.y), MAX_DRAW_VELOCITY);
+        Uint8 normVel = velocity / MAX_DRAW_VELOCITY * 255;
+        SDL_Color color = {normVel, 0x00, 0xFF - normVel, 0xFF};
+        particle.setColor(color);
+        particle.draw(mRenderer);
+    }
+}
+
+void Graphics::handleEvents(SDL_Event& e, bool& running, SDL_Point &mousePosition, int &particlesCount)
+{
+    while (SDL_PollEvent(&e) != 0)
+    {
+        // Prevents from closing immediately
+        if (e.type == SDL_QUIT)
+        {
+            running = false;
+        }
+
+        if (e.type == SDL_MOUSEMOTION)
+        {
+            SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+        }
+
+        if (e.type == SDL_MOUSEBUTTONDOWN)
+        {
+            particlesCount++;
+            mEngine->addParticle(mousePosition.x, mousePosition.y);
+        }
+
+        if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            int h, w;
+            SDL_GetWindowSize(mWindow, &w, &h);
+            mEngine->changeContainerSize(w, h);
+        }
+    }
+}
+
 void Graphics::run()
 {
     // Flag that indicates wheter the engine is running
@@ -97,80 +162,32 @@ void Graphics::run()
 
     SDL_Point mousePosition = {0, 0};
 
-    float dt = 1.0 / SCREEN_FPS;
-
-    int currentParticles = 0;
+    int particlesCount = 0;
     Texture particlesText(mRenderer, mFont);
-    particlesText.loadFromRenderedText("Particles: 0", {0xFF, 0xFF, 0xFF});
+    particlesText.loadFromRenderedText("Particles: 0", TEXT_COLOR);
 
     int currentFrame = 0;
     int frameCounter = 0;
     Timer fpsTimer;
     Texture fpsText(mRenderer, mFont);
-    fpsText.loadFromRenderedText("FPS: 0", {0xFF, 0xFF, 0xFF});
+    fpsText.loadFromRenderedText("FPS: 0", TEXT_COLOR);
     fpsTimer.start();
     
     while (running)
     {   
         capTimer.start();
-        while (SDL_PollEvent(&e) != 0)
-        {
-            // Prevents from closing immediately
-            if (e.type == SDL_QUIT)
-            {
-                running = false;
-            }
+        handleEvents(e, running, mousePosition, particlesCount);
 
-            if (e.type == SDL_MOUSEMOTION)
-            {
-                SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-            }
+        particlesText.loadFromRenderedText("Particles: " + std::to_string(particlesCount), TEXT_COLOR);
 
-            if (e.type == SDL_MOUSEBUTTONDOWN)
-            {
-                currentParticles++;
-                mEngine->addParticle(mousePosition.x, mousePosition.y);
-                particlesText.loadFromRenderedText("Particles: " + std::to_string(currentParticles), {0xFF, 0xFF, 0xFF});
-            }
-
-            if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-            {
-                int h, w;
-                SDL_GetWindowSize(mWindow, &w, &h);
-                mEngine->changeContainerSize(w, h);
-            }
-        }
-
-        SDL_SetRenderDrawColor(mRenderer, 0x40, 0x40, 0x40, 0xFF);
+        SDL_SetRenderDrawColor(mRenderer, 0x80, 0x80, 0x80, 0xFF);
         SDL_RenderClear(mRenderer);
 
         mEngine->update(dt);
 
-        for (Particle& particle : mEngine->getParticles())
-        {   
-            Vector2D velocityVector = particle.getVelocity(dt);
-            float velocity = std::min(sqrt(velocityVector.x * velocityVector.x + velocityVector.y + velocityVector.y), 500.f);
-            Uint8 normVel = velocity / 500 * 255;
-            SDL_Color color = {normVel, 0x00, 0xFF - normVel, 0xFF};
-            particle.setColor(color);
-            particle.draw(mRenderer);
-        }
+        drawParticles();
 
-
-        frameCounter++;
-        Uint32 updateTime = fpsTimer.getTicks();
-        if (updateTime >= 400)
-        {
-            float fps = frameCounter / (updateTime / 1000.0f);
-            frameCounter = 0;
-
-            fpsTimer.start();
-
-            if (!fpsText.loadFromRenderedText("FPS: " + std::to_string(fps).substr(0, 5), {0xFF, 0xFF, 0xFF}))
-            {
-                printf("Failed to render FPS text.\n");
-            }
-        }
+        updateFPS(frameCounter, fpsTimer, fpsText);
 
         fpsText.render(0, 0);
         particlesText.render(0, 16);

@@ -63,6 +63,12 @@ void Graphics::cleanup()
         mEngine = nullptr;
     }
 
+    for (Texture* texture : mTextTextures) {
+        delete texture;
+    }
+
+    mTextTextures.clear();
+
     TTF_CloseFont(mFont);
     mFont = nullptr;
 
@@ -88,7 +94,7 @@ bool Graphics::loadMedia()
 }
 
 
-void Graphics::updateFPS(int &frameCounter, Timer& fpsTimer, Texture& fpsText)
+void Graphics::updateFPS(int &frameCounter, Timer& fpsTimer, Texture* fpsText)
 {
     frameCounter++;
     Uint32 updateTime = fpsTimer.getTicks();
@@ -149,18 +155,16 @@ void Graphics::handleEvents(SDL_Event& e, bool& running, SDL_Point &mousePositio
 
         if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
-            int h, w;
-            SDL_GetWindowSize(mWindow, &w, &h);
-            mEngine->changeContainerSize(w, h);
+            mEngine->changeContainerSize(e.window.data1, e.window.data2);
         }
     }
 }
 
-Texture Graphics::createTextTexture(std::string initText)
+Texture* Graphics::createTextTexture(std::string initText)
 {
-    Texture newTexture(mRenderer, mFont);
-    mTextTextures.push_back(&newTexture);
-    if (!newTexture.loadFromRenderedText(initText, TEXT_COLOR))
+    Texture* newTexture = new Texture(mRenderer, mFont);
+    mTextTextures.push_back(newTexture);
+    if (!newTexture->loadFromRenderedText(initText, TEXT_COLOR))
     {
         printf("Failed to render text.\n");
     }
@@ -168,9 +172,9 @@ Texture Graphics::createTextTexture(std::string initText)
     return newTexture;
 }
 
-void Graphics::updateTextTexture(Texture& texture, std::string text)
+void Graphics::updateTextTexture(Texture* texture, std::string text)
 {
-    if (!texture.loadFromRenderedText(text, TEXT_COLOR))
+    if (!texture->loadFromRenderedText(text, TEXT_COLOR))
     {
         printf("Failed to render text.\n");
     }
@@ -200,15 +204,15 @@ void Graphics::run()
     SDL_Point mousePosition = {0, 0};
  
     int particlesCount = 0;
-    Texture particlesCountText = createTextTexture("Particles: 0");
+    Texture* particlesCountText = createTextTexture("Particles: 0");
 
     Uint64 currentFrame = 0;
     int frameCounter = 0;
     Timer fpsTimer;
-    Texture fpsText = createTextTexture("FPS: 0");
+    Texture* fpsText = createTextTexture("FPS: 0");
     fpsTimer.start();
 
-    Texture particleSizeText = createTextTexture("Particle size: " + std::to_string(mParticleRadius));
+    Texture* particleSizeText = createTextTexture("Particle size: " + std::to_string(mParticleRadius));
     
     while (running)
     {   

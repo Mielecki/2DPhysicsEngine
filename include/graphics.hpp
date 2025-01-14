@@ -38,15 +38,15 @@ private:
     Engine* mEngine;
     std::vector<Texture*> mTextTextures;
 
-    void updateFPS(int &frameCounter, Timer& fpsTimer, Texture& fpsText);
+    void updateFPS(int &frameCounter, Timer& fpsTimer, Texture* fpsText);
 
     void drawParticles();
 
     void handleEvents(SDL_Event& e, bool& running, SDL_Point &mousePosition, int &particlesCount);
 
-    Texture createTextTexture(std::string initText);
+    Texture* createTextTexture(std::string initText);
 
-    void updateTextTexture(Texture& texture, std::string text);
+    void updateTextTexture(Texture* texture, std::string text);
 
     void renderTextTextures();
 };

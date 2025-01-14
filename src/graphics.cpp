@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <SDL2/SDL_ttf.h>
+#include <algorithm>
 
 Graphics::Graphics() : mWindow(nullptr), mRenderer(nullptr), mEngine(nullptr) {}
 
@@ -32,7 +33,7 @@ bool Graphics::init()
     }
 
     // Creates window
-    mWindow = SDL_CreateWindow("2DPhysicsEngine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    mWindow = SDL_CreateWindow("2DPhysicsEngine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (mWindow == nullptr)
     {
         printf("SDL creating window error: %s\n", SDL_GetError());
@@ -98,7 +99,6 @@ void Graphics::run()
 
     float dt = 1.0 / SCREEN_FPS;
 
-    int maxParticles = 200;
     int currentParticles = 0;
     Texture particlesText(mRenderer, mFont);
     particlesText.loadFromRenderedText("Particles: 0", {0xFF, 0xFF, 0xFF});
@@ -132,11 +132,14 @@ void Graphics::run()
                 mEngine->addParticle(mousePosition.x, mousePosition.y);
                 particlesText.loadFromRenderedText("Particles: " + std::to_string(currentParticles), {0xFF, 0xFF, 0xFF});
             }
-        }
 
-        int h, w;
-        SDL_GetWindowSize(mWindow, &w, &h);
-        mEngine->changeContainerSize(w, h);
+            if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+            {
+                int h, w;
+                SDL_GetWindowSize(mWindow, &w, &h);
+                mEngine->changeContainerSize(w, h);
+            }
+        }
 
         SDL_SetRenderDrawColor(mRenderer, 0x40, 0x40, 0x40, 0xFF);
         SDL_RenderClear(mRenderer);
@@ -144,7 +147,12 @@ void Graphics::run()
         mEngine->update(dt);
 
         for (Particle& particle : mEngine->getParticles())
-        {
+        {   
+            Vector2D velocityVector = particle.getVelocity(dt);
+            float velocity = std::min(sqrt(velocityVector.x * velocityVector.x + velocityVector.y + velocityVector.y), 500.f);
+            Uint8 normVel = velocity / 500 * 255;
+            SDL_Color color = {normVel, 0x00, 0xFF - normVel, 0xFF};
+            particle.setColor(color);
             particle.draw(mRenderer);
         }
 

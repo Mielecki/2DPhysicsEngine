@@ -34,3 +34,14 @@ void Particle::update(float dt)
 
     changePosition(newPosition);
 }
+
+void Particle::setColor(SDL_Color color)
+{
+    mColor = color;
+}
+
+
+Vector2D Particle::getVelocity(float dt)
+{
+    return (mPosition - mPreviousPosition) / dt;
+}

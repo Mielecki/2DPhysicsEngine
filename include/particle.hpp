@@ -16,6 +16,10 @@ public:
     void update(float dt);
 
     void addVelocity(Vector2D velocity);
+
+    void setColor(SDL_Color color);
+
+    Vector2D getVelocity(float dt);
     
     Vector2D mPosition;
     Vector2D mPreviousPosition;

@@ -17,24 +17,24 @@ Graphics::~Graphics()
     cleanup();
 }
 
-// Initalizes SDL, window, renderer and physics engine
+// Initalize SDL, window, renderer and physics engine
 bool Graphics::init()
 {
-    // Initializes SDL video
+    // Initialize SDL video
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         printf("SDL initaliaztion error: %s\n", SDL_GetError());
         return false;
     }
 
-    // Initalizes SDL_ttf
+    // Initalize SDL_ttf
     if (TTF_Init() == -1)
     {
         printf("SDL_ttf initaliaztion error: %s\n", TTF_GetError());
         return false;
     }
 
-    // Creates window
+    // Create window
     mWindow = SDL_CreateWindow("2DPhysicsEngine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (mWindow == nullptr)
     {
@@ -42,7 +42,7 @@ bool Graphics::init()
         return false;
     }
 
-    // Creates renderer for window that uses hardware acceleration and vsync
+    // Create renderer for window that uses hardware acceleration and vsync
     mRenderer = SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (mRenderer == nullptr)
     {
@@ -54,7 +54,7 @@ bool Graphics::init()
     return true;
 }
 
-// Closes SDL2
+// Close SDL2
 void Graphics::cleanup()
 {
     if (mEngine != nullptr)
@@ -77,7 +77,7 @@ void Graphics::cleanup()
 
 bool Graphics::loadMedia()
 {
-    mFont = TTF_OpenFont("src/assets/RobotoMono-VariableFont_wght.ttf", 16);
+    mFont = TTF_OpenFont("src/assets/RobotoMono-VariableFont_wght.ttf", TEXT_SIZE);
     if (mFont == nullptr)
     {
         printf("SDL_ttf opening font error: %s\n", TTF_GetError());
@@ -99,10 +99,7 @@ void Graphics::updateFPS(int &frameCounter, Timer& fpsTimer, Texture& fpsText)
 
         fpsTimer.start();
 
-        if (!fpsText.loadFromRenderedText("FPS: " + std::to_string(fps).substr(0, 5), TEXT_COLOR))
-        {
-            printf("Failed to render FPS text.\n");
-        }
+        updateTextTexture(fpsText, "FPS: " + std::to_string(fps).substr(0, 5));
     }
 }
 
@@ -124,22 +121,31 @@ void Graphics::handleEvents(SDL_Event& e, bool& running, SDL_Point &mousePositio
 {
     while (SDL_PollEvent(&e) != 0)
     {
-        // Prevents from closing immediately
-        if (e.type == SDL_QUIT)
+        switch(e.type)
         {
+        case SDL_QUIT: // Prevent from closing immediately
             running = false;
-        }
-
-        if (e.type == SDL_MOUSEMOTION)
-        {
+            break;
+        case SDL_MOUSEMOTION:
             SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            particlesCount++;
+            mEngine->addParticle(mousePosition.x, mousePosition.y, mParticleRadius);
+            break;
+        case SDL_KEYDOWN:
+            switch (e.key.keysym.sym)
+            {
+            case SDLK_UP:
+                if (mParticleRadius < 40) mParticleRadius += 1;
+                break;
+            case SDLK_DOWN:
+                if (mParticleRadius > 5) mParticleRadius -= 1;
+                break;
+            }
+            break;
         }
 
-        if (e.type == SDL_MOUSEBUTTONDOWN)
-        {
-            particlesCount++;
-            mEngine->addParticle(mousePosition.x, mousePosition.y);
-        }
 
         if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
@@ -150,35 +156,67 @@ void Graphics::handleEvents(SDL_Event& e, bool& running, SDL_Point &mousePositio
     }
 }
 
+Texture Graphics::createTextTexture(std::string initText)
+{
+    Texture newTexture(mRenderer, mFont);
+    mTextTextures.push_back(&newTexture);
+    if (!newTexture.loadFromRenderedText(initText, TEXT_COLOR))
+    {
+        printf("Failed to render text.\n");
+    }
+
+    return newTexture;
+}
+
+void Graphics::updateTextTexture(Texture& texture, std::string text)
+{
+    if (!texture.loadFromRenderedText(text, TEXT_COLOR))
+    {
+        printf("Failed to render text.\n");
+    }
+}
+
+void Graphics::renderTextTextures()
+{
+    int offset = 0;
+    for(Texture* texture : mTextTextures)
+    {
+        texture->render(0, offset);
+        offset += TEXT_SIZE;
+    }
+}
+
 void Graphics::run()
 {
-    // Flag that indicates wheter the engine is running
+    // Flag that indicates whether the engine is running
     bool running = true;
 
     // Event handler (necessary to prevent the window from closing immediately)
     SDL_Event e;
-
+    
+    // Timer necessary for capping the frame rate
     Timer capTimer;
 
     SDL_Point mousePosition = {0, 0};
-
+ 
     int particlesCount = 0;
-    Texture particlesText(mRenderer, mFont);
-    particlesText.loadFromRenderedText("Particles: 0", TEXT_COLOR);
+    Texture particlesCountText = createTextTexture("Particles: 0");
 
-    int currentFrame = 0;
+    Uint64 currentFrame = 0;
     int frameCounter = 0;
     Timer fpsTimer;
-    Texture fpsText(mRenderer, mFont);
-    fpsText.loadFromRenderedText("FPS: 0", TEXT_COLOR);
+    Texture fpsText = createTextTexture("FPS: 0");
     fpsTimer.start();
+
+    Texture particleSizeText = createTextTexture("Particle size: " + std::to_string(mParticleRadius));
     
     while (running)
     {   
         capTimer.start();
         handleEvents(e, running, mousePosition, particlesCount);
 
-        particlesText.loadFromRenderedText("Particles: " + std::to_string(particlesCount), TEXT_COLOR);
+        updateTextTexture(particlesCountText, "Particles: " + std::to_string(particlesCount));
+        updateTextTexture(particleSizeText, "Particle size: " + std::to_string(mParticleRadius));
 
         SDL_SetRenderDrawColor(mRenderer, 0x80, 0x80, 0x80, 0xFF);
         SDL_RenderClear(mRenderer);
@@ -189,11 +227,11 @@ void Graphics::run()
 
         updateFPS(frameCounter, fpsTimer, fpsText);
 
-        fpsText.render(0, 0);
-        particlesText.render(0, 16);
+        renderTextTextures();
 
         SDL_RenderPresent(mRenderer);
 
+        // cap the frame rate
         int frameTicks = capTimer.getTicks();
         if (frameTicks < 1000 / SCREEN_FPS)
         {

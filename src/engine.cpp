@@ -23,6 +23,7 @@ void Engine::resolveWallCollision()
 
 void Engine::resolveCollision()
 {
+    const float eps = 0.0001f;
     for (Particle& p1 : mParticles)
     {
         for (Particle& p2 : mParticles)
@@ -33,6 +34,12 @@ void Engine::resolveCollision()
             float minDistance = p1.mRadius + p2.mRadius;
 
             float distance = std::sqrt(offset.x * offset.x + offset.y * offset.y);
+
+            // prevent division by zero and undefined behavior when the distance between particles is zero
+            if (distance < eps)
+            {
+                distance = eps;
+            }
 
             if (distance < minDistance)
             {

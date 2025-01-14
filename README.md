@@ -6,7 +6,7 @@ This project is a simple 2D physics engine built with **SDL2**. It simulates par
 
 ## Demo
 
-![Demo](https://i.imgur.com/ykgEgMp.gif)
+![Demo](https://i.imgur.com/iZlM6Th.gif)
 
 
 ## Requirements

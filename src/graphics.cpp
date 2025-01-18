@@ -119,7 +119,7 @@ void Graphics::drawParticles()
         Uint8 normVel = velocity / MAX_DRAW_VELOCITY * 255;
         SDL_Color color = {normVel, 0x00, 0xFF - normVel, 0xFF};
         particle.setColor(color);
-        particle.draw(mRenderer);
+        particle.render(mRenderer);
     }
 }
 

@@ -4,7 +4,7 @@ Engine::Engine(int width, int height) : mContainerWidth(width), mContainerHeight
 
 void Engine::addParticle(int x, int y, int radius)
 {
-    Particle particle({x, y}, radius, {0xFF, 0xFF, 0xFF, 0xFF});
+    Particle particle({x, y}, radius);
     particle.addVelocity({0, 0});
     
     mParticles.push_back(particle);
